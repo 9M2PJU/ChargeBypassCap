@@ -3,6 +3,8 @@
 Userspace 80% charge cap for Sakata kernel (tested on POCO F7 / onyx,
 xiaomi.eu + SakataX). No kernel source needed, no app needed.
 
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
+
 ## How it works
 
 The Sakata kernel exposes a bypass switch in sysfs:
