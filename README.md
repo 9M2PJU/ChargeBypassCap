@@ -95,12 +95,6 @@ daemon PID, and recent log.
 - State dir: `/data/adb/chargebypasscap/` (holding, override, last_status, cap.log)
 - Log: `/data/adb/chargebypasscap/cap.log` - check what it did overnight.
 
-## Support
-
-If this module saves your battery, consider buying me a coffee:
-
-[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
-
 ## License
 
 GPL-3.0. See LICENSE.
