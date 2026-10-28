@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.jpg" alt="ChargeBypassCap logo" width="360">
+</p>
+
 # ChargeBypassCap
 
 [![Release](https://img.shields.io/github/v/release/9M2PJU/ChargeBypassCap?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap/releases)
