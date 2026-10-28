@@ -6,7 +6,6 @@ STATEDIR=/data/adb/chargebypasscap
 LOG=$STATEDIR/cap.log
 HOLDING=$STATEDIR/holding
 OVERRIDE=$STATEDIR/override
-TILE="UNUSED - direct node control (kept for reference)"
 NODE=/sys/class/xm_power/charger/smart_charge/smart_night
 CAPF=/sys/class/power_supply/battery/capacity
 CURF=/sys/class/power_supply/battery/current_now

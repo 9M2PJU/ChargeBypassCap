@@ -5,17 +5,19 @@
 # No QS tile needed; the Sakata app/tile remains usable as manual backup
 # (both write the same node, last writer wins).
 # Behavior (always on while cable is plugged):
-#   - Battery reaches 80% while charging -> taps Bypass tile ON.
+#   - Battery reaches 80% while charging -> writes 1 to the node.
 #     Phone runs off the cable, battery rests at ~80%.
-#   - Battery falls to 78% while suspended -> taps tile OFF, charging resumes.
-#   - You want 100% (travel day)? When it holds at 80%, tap the Bypass
-#     tile OFF once yourself. The daemon backs off until you unplug.
-#     Next plug session the 80% cap is active again automatically.
+#   - Battery falls to 78% while suspended -> writes 0, charging resumes.
+#   - You want 100% (travel day)? When it holds at 80%, use the action
+#     button (or the Sakata app tile) to release bypass once yourself.
+#     The daemon backs off until you unplug. Next plug session the 80%
+#     cap is active again automatically.
 #   - Plug in = intent to charge: on every fresh plug-in below 80% the
 #     daemon makes sure bypass is OFF.
 #
-# Requirements: Bypass QS tile added to Quick Settings (done once by user).
-# Runs as root from /data/adb/service.d at boot. Log: /data/adb/bypasscap/cap.log
+# Requirements: root + a Sakata kernel exposing the bypass node above.
+# Runs as root from the KernelSU module service.sh at boot.
+# State + log: /data/adb/chargebypasscap/cap.log
 
 MODDIR=/data/adb/chargebypasscap
 LOG=$MODDIR/cap.log
@@ -95,7 +97,7 @@ if [ "$prev_usb" = "1" ] && [ -n "$cap0" ] && [ "$cap0" -ge "$HIGH" ] && [ -n "$
   log "bypasscap started (adopted existing hold at ${cap0}%)"
 else
   rm -f $HOLDING
-  log "bypasscap started (always-on 80% cap, override via manual tile tap)"
+  log "chargebypasscap started (always-on 80% cap, override via action button)"
 fi
 
 grace=0
