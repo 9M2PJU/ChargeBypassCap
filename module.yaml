@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/KernelSU-Modules/tools/main/schemas/module.schema.json
+schemaVersion: 1
+id: bypasscap
+name: BypassCap - 80% charge cap
+summary: Userspace 80% charge cap for Sakata kernel via the bypass node.
+description: README.md
+license: GPL-3.0-only
+homepage: https://github.com/9M2PJU/BypassCap
+support: https://github.com/9M2PJU/BypassCap/issues
+tags: [battery, charging]
+authors:
+  - name: 9M2PJU
+    url: https://github.com/9M2PJU
+compatibility:
+  architectures: [arm64-v8a]
