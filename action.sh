@@ -55,3 +55,5 @@ else
 fi
 echo "--- recent log ---"
 tail -n 5 $LOG 2>/dev/null || echo "(no log yet)"
+echo "---"
+echo "Enjoying ChargeBypassCap? https://buymeacoffee.com/9m2pju"
