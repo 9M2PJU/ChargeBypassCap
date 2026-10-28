@@ -32,7 +32,7 @@ The module is a small root daemon that flips this switch for you:
 
 The daemon also reports itself: every poll it rewrites the module
 description in the KernelSU manager with a live emoji status, and appends
-actions to `/data/adb/bypasscap/cap.log`.
+actions to `/data/adb/chargebypasscap/cap.log`.
 
 What it does NOT do: it never touches ROM Battery protection (leave that on
 Charge fully - the built-in 80% limit path is broken on this kernel and
@@ -74,9 +74,9 @@ daemon PID, and recent log.
 ## Install
 
 - Via KernelSU manager: Modules > Install from storage > pick the release zip.
-- Or via adb (root): copy this repo's files to `/data/adb/modules/bypasscap/`,
+- Or via adb (root): copy this repo's files to `/data/adb/modules/chargebypasscap/`,
   `chmod 755 service.sh bypasscap.sh action.sh uninstall.sh`, reboot.
-- Verify: `su -c 'tail /data/adb/bypasscap/cap.log'` should show the daemon
+- Verify: `su -c 'tail /data/adb/chargebypasscap/cap.log'` should show the daemon
   starting, and the module description shows live status.
 
 ## Files
@@ -90,8 +90,8 @@ daemon PID, and recent log.
 
 ## State and log
 
-- State dir: `/data/adb/bypasscap/` (holding, override, last_status, cap.log)
-- Log: `/data/adb/bypasscap/cap.log` - check what it did overnight.
+- State dir: `/data/adb/chargebypasscap/` (holding, override, last_status, cap.log)
+- Log: `/data/adb/chargebypasscap/cap.log` - check what it did overnight.
 
 ## License
 

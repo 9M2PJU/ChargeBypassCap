@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/KernelSU-Modules/tools/main/schemas/module.schema.json
 schemaVersion: 1
-id: bypasscap
+id: chargebypasscap
 name: ChargeBypassCap
 summary: Userspace 80% charge cap for Sakata kernel via the bypass node.
 description: README.md

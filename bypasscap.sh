@@ -17,10 +17,10 @@
 # Requirements: Bypass QS tile added to Quick Settings (done once by user).
 # Runs as root from /data/adb/service.d at boot. Log: /data/adb/bypasscap/cap.log
 
-STATEDIR=/data/adb/bypasscap
-LOG=$STATEDIR/cap.log
-HOLDING=$STATEDIR/holding
-OVERRIDE=$STATEDIR/override
+MODDIR=/data/adb/chargebypasscap
+LOG=$MODDIR/cap.log
+HOLDING=$MODDIR/holding
+OVERRIDE=$MODDIR/override
 NODE=/sys/class/xm_power/charger/smart_charge/smart_night
 CAP=/sys/class/power_supply/battery/capacity
 CUR=/sys/class/power_supply/battery/current_now
@@ -31,7 +31,7 @@ POLL=30
 CHG_THRESH=-500000
 GRACE_POLLS=3
 
-mkdir -p $STATEDIR
+mkdir -p $MODDIR
 rm -f $HOLDING $OVERRIDE
 
 log() {
@@ -42,13 +42,14 @@ log() {
 
 is_charging() { [ "$1" -lt "$CHG_THRESH" ]; }
 
-MODPROP=/data/adb/modules/bypasscap/module.prop
-WEBROOT=/data/adb/modules/bypasscap/webroot
+SCRIPTDIR=$(dirname "$0")
+MODPROP=$SCRIPTDIR/module.prop
+WEBROOT=$SCRIPTDIR/webroot
 TEMPLATE=$WEBROOT/template.html
 PAGE=$WEBROOT/index.html
-LASTPAGE=$STATEDIR/last_page
+LASTPAGE=$MODDIR/last_page
 BASE_DESC="80% cap for Sakata kernel via bypass node. Action button = full charge / resume cap."
-LAST_STATUS=$STATEDIR/last_status
+LAST_STATUS=$MODDIR/last_status
 
 update_desc() {
   # Rewrite whenever module.prop does not already carry this exact status,
