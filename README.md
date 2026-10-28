@@ -159,6 +159,21 @@ Verdict: healthy. One resident process, bounded writes (one sysfs node
 plus its own state dir), fails safe (a kernel that ignores the node lands
 in override, never in a bootloop), clean uninstall.
 
+### Resource usage (measured 2026-10-29, unplugged, screen off)
+
+- Memory: one process, VmRSS 1248 KB (~1.2 MB). State dir 12 KB total
+  (`cap.log` capped at 200 lines, currently 524 B).
+- CPU: 0.14 s (self plus forked helpers) over an 80.6 s window covering
+  ~1.3 polls, i.e. about 0.1 s per 60 s poll, 0.17% of one core.
+  Lifetime average since daemon start: 0.16%. Per poll it forks ~6
+  helpers (`cat` x3, `rm`, `grep`+`sed` for the status line) and sleeps;
+  ~50 voluntary context switches per poll, each microseconds.
+- Sleep state: parked in `rt_sigsuspend` (inside `sleep 60`) between
+  polls. Holds no wakelocks, registers no alarms, writes nothing while
+  unplugged.
+- Bottom line: below anything the battery stats can attribute. Any
+  single user app wakes the phone orders of magnitude more.
+
 ## Files
 
 - `service.sh` - started by KernelSU on boot, launches the daemon detached.
