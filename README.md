@@ -11,11 +11,29 @@ Userspace 80% charge cap for Sakata kernel. No kernel source needed, no app need
 
 ## Why
 
-The built-in 80% Battery protection limit on SakataX is broken: its
-`soc_limit` voter blocks **all** charging at any state of charge (verified
-frozen at 44% and 50%), instead of engaging near 80%. This module works
-around it entirely in userspace: it watches the battery and drives the
-kernel's own bypass switch directly.
+The built-in 80% Battery protection limit does not work on this combination:
+POCO F7 running HyperOS EU (xiaomi.eu) with the SakataX kernel. Enabling it
+does not cap charging at 80%. It freezes charging completely, at whatever
+charge level the battery happens to be at.
+
+What actually happens, verified by measurement:
+
+- At 44% and again at 50% state of charge, turning on the 80% limit drops
+  charge current to exactly 0 mA within seconds. The battery sits frozen
+  while the cable stays plugged in.
+- The kernel log shows why: the `soc_limit` voter holds `chg_en: 0` at those
+  levels, thirty points below the limit it is supposed to enforce.
+- Switching protection to Intelligent or Charge fully restores full-rate
+  fast charging immediately (5+ A). Switching back to the 80% limit freezes
+  it again within seconds. The bypass app was OFF through all of this, so
+  the app is not the cause. The limiter itself is broken.
+
+So on this ROM + kernel, the stock 80% limit is unusable: it behaves as a
+"never charge" switch rather than a cap. This module replaces it entirely
+in userspace. It leaves ROM Battery protection alone (keep it on Charge
+fully so the broken limiter never engages) and enforces a real 80% hold
+itself: charge to 80, run the phone off the cable, resume at 78. The bug
+itself has been reported upstream to the Sakata developer with logs.
 
 ## How it works
 
