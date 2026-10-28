@@ -29,9 +29,9 @@ CUR=/sys/class/power_supply/battery/current_now
 USBON=/sys/class/power_supply/usb/online
 HIGH=80
 LOW=78
-POLL=30
+POLL=60
 CHG_THRESH=-500000
-GRACE_POLLS=3
+GRACE_POLLS=2
 
 mkdir -p $MODDIR
 rm -f $HOLDING $OVERRIDE

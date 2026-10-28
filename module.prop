@@ -1,7 +1,7 @@
 id=chargebypasscap
 name=ChargeBypassCap
-version=v1.6
-versionCode=9
+version=v1.7
+versionCode=10
 author=9M2PJU
 description=80% cap for Sakata kernel via bypass node. Action button = full charge / resume cap.
 support=https://github.com/9M2PJU/ChargeBypassCap/issues
