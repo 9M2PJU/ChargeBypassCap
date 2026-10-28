@@ -54,7 +54,7 @@ update_desc() {
   # Rewrite whenever module.prop does not already carry this exact status,
   # so external overwrites (module updates, manager edits) self-heal
   # on the next poll instead of going blind.
-  want="$BASE_DESC [$1]"
+  want="[$1] $BASE_DESC"
   cur=$(grep '^description=' $MODPROP 2>/dev/null | sed 's/^description=//')
   if [ "$cur" != "$want" ]; then
     if grep -q '^description=' $MODPROP 2>/dev/null; then
