@@ -113,6 +113,52 @@ state, daemon PID, and recent log.
   xiaomi.eu + SakataX has been tested.
 - Wired charging only (the wireless path is untested).
 
+## Audit report (2026-10-29, v1.7.1 on POCO F7)
+
+Method: live checks on the author's phone (POCO F7, xiaomi.eu + SakataX,
+module installed from the v1.7.1 release ZIP) plus a full read of all four
+scripts. Every check below was run, not inferred.
+
+Live checks, all passed:
+
+- Single daemon: one `sh .../bypasscap.sh` process (PPID 1, RSS ~1.3 MB).
+  No twins, no strays in `service.d`.
+- Installed files match the repo: `bypasscap.sh`, `service.sh`,
+  `action.sh`, `uninstall.sh` are md5-identical to v1.7.1. `module.prop`
+  differs only in the live `description=` status line (by design).
+- Permissions: all four scripts `755`.
+- Node control: `/sys/class/xm_power/charger/smart_charge/smart_night`
+  written `0 -> 1 -> 0` directly, each read back correctly (cable
+  unplugged, daemon state untouched by the test).
+- Action button: tapped ON then OFF. Override latched and cleared
+  correctly, status output accurate, no leftover state files.
+- Idle footprint: daemon wakes every 60 s, reads three sysfs files, sleeps.
+  No log writes and no node writes while unplugged.
+- Log (`cap.log`): only plug-in, cap-engage and start lines. No errors,
+  no crash loops.
+- `uninstall.sh`: kills the daemon by its exact module path and removes
+  only `/data/adb/chargebypasscap`. Verified by reading, not executed.
+
+Bugs found and fixed during this audit:
+
+- Twin daemons: the v1.0 tile-tapping daemon
+  (`/data/adb/service.d/bypasscap.sh`) was still launching at every boot
+  next to the module daemon, both driving charging control. Killed both,
+  deleted the legacy script and its dead state dir. One daemon since.
+- Dead action button: `action.sh` shipped `644`, the manager could not
+  execute it (`Permission denied`). Fixed on device, then fixed in git:
+  all scripts are `755` from v1.7.1 on.
+
+Minor nits (cosmetic, no behavior change, left as-is):
+
+- Boot log lines use two names: `bypasscap started ...` in the
+  adopt-existing-hold branch vs `chargebypasscap started ...` in the
+  normal branch.
+
+Verdict: healthy. One resident process, bounded writes (one sysfs node
+plus its own state dir), fails safe (a kernel that ignores the node lands
+in override, never in a bootloop), clean uninstall.
+
 ## Files
 
 - `service.sh` - started by KernelSU on boot, launches the daemon detached.
