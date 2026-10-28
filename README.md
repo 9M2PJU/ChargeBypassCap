@@ -1,4 +1,4 @@
-# BypassCap
+# ChargeBypassCap
 
 Userspace 80% charge cap for Sakata kernel (tested on POCO F7 / onyx,
 xiaomi.eu + SakataX). No kernel source needed, no app needed.
