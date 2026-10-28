@@ -1,85 +1,95 @@
 # ChargeBypassCap
 
-Userspace 80% charge cap for Sakata kernel (tested on POCO F7 / onyx,
-xiaomi.eu + SakataX). No kernel source needed, no app needed.
+[![Release](https://img.shields.io/github/v/release/9M2PJU/ChargeBypassCap?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap/releases)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
+[![KernelSU](https://img.shields.io/badge/KernelSU-module-green?style=flat-square)](https://kernelsu.org)
+[![Platform](https://img.shields.io/badge/platform-Android%2015%2B-lightgrey?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap)
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
+
+Userspace 80% charge cap for Sakata kernel. No kernel source needed, no app needed, no settings to flip.
+
+## Why
+
+The built-in 80% Battery protection limit on SakataX is broken: its
+`soc_limit` voter blocks **all** charging at any state of charge (verified
+frozen at 44% and 50%), instead of engaging near 80%. This module works
+around it entirely in userspace: it watches the battery and drives the
+kernel's own bypass switch directly.
 
 ## How it works
 
 The Sakata kernel exposes a bypass switch in sysfs:
 
 - `/sys/class/xm_power/charger/smart_charge/smart_night`
-- Write `1` = bypass ON: charging suspends, the phone runs off the USB cable,
-  battery current drops to 0 mA. Write `0` = bypass OFF: charging resumes.
-- Verified by direct test: `echo 1` froze the battery at 0 mA with the bus
-  live, `echo 0` resumed charging at several amps.
+- Write `1`: bypass ON. Charging suspends, the phone runs off the USB cable,
+  battery current drops to 0 mA. Write `0`: bypass OFF, charging resumes.
 
-The module is a small root daemon that flips this switch for you:
+A small root daemon (`bypasscap.sh`, started at boot by `service.sh`)
+polls the battery every 30 seconds while the cable is plugged in:
 
-1. `service.sh` runs at every boot as root and launches `bypasscap.sh`,
-   which polls the battery every 30 seconds while the cable is plugged in.
-2. Battery reaches 80% while charging -> daemon writes `1`. The phone runs
-   off the cable and the battery rests at ~80%.
-3. Battery sinks to 78% while suspended -> daemon writes `0`, charging resumes.
-   The 2% gap stops the switch from flapping.
-4. 79% deadband and the 100% trickle state are left alone.
-5. Fresh plug-in below 80% with bypass stuck on -> daemon writes `0`,
-   because plug in means intent to charge.
-6. You release bypass yourself while the daemon is holding (action button,
-   or the Sakata app tile) -> the daemon sees current flowing past its grace
-   period, latches an override till you unplug, and stops fighting you.
-   Next plug session the cap is active again automatically.
-7. Unplug -> all session state is cleared.
+| Battery | State | Action |
+| --- | --- | --- |
+| Reaches 80% while charging | Normal | Write `1`: hold at 80, phone runs off the cable |
+| Sinks to 78% while suspended | Holding | Write `0`: charging resumes |
+| 79%, or 100% trickle | Either | Left alone (deadband) |
+| Fresh plug-in below 80%, stuck suspended | Suspended | Write `0`: plug in means intent to charge |
+| Holding, but current flows past grace period | Holding | You released it manually: latch override till unplug |
+| Unplugged | Any | Clear session state; next plug starts capped again |
 
-The daemon also reports itself: every poll it rewrites the module
-description in the KernelSU manager with a live emoji status, and appends
-actions to `/data/adb/chargebypasscap/cap.log`.
+The 2% gap between engage and release stops the switch from flapping. The
+daemon never touches ROM Battery protection: leave that on Charge fully so
+the broken built-in limiter never engages.
 
-What it does NOT do: it never touches ROM Battery protection (leave that on
-Charge fully - the built-in 80% limit path is broken on this kernel and
-blocks all charging at any SoC), it needs no app, no QS tile, and no settings
-to flip.
+## Live status
 
-## How to use
+The module description in the KernelSU manager always shows the live state,
+rewritten by the daemon every poll:
 
-Do nothing day to day: plug in, it caps at 80. The module description in
-the KernelSU manager always shows live status:
+| Display | Meaning |
+| --- | --- |
+| 🔋 charging 76% | Filling normally, cap engages at 80% |
+| ⛔ bypass ON, holding 88% | Resting at the cap, phone on cable power |
+| 🔓 override till unplug (92%) | Heading to 100%, auto-resets on unplug |
+| ⏸ idle | Suspended by your own hand, daemon leaving it alone |
+| 🔌 unplugged | Daemon idle |
 
-- 🔋 charging 76% - filling normally, cap engages at 80%
-- ⛔ bypass ON, holding 88% - resting at the cap, phone on cable power
-- 🔓 override till unplug (92%) - heading to 100%, auto-resets on unplug
-- ⏸ idle - suspended by your own hand, daemon leaving it alone
-- 🔌 unplugged - daemon idle
+## Installation
 
-Travel-day full charge: tap the module **action button** once. It switches
-bypass off and latches override till unplug. Tap it again to resume the cap
-(it re-holds within ~30s if at 80%+). The button also prints battery state,
-daemon PID, and recent log.
+**KernelSU manager (recommended):**
+Modules > Install from storage > pick the release ZIP from the
+[releases page](https://github.com/9M2PJU/ChargeBypassCap/releases). Reboot.
+
+**Manual (adb, root):**
+copy this repository's files to `/data/adb/modules/chargebypasscap/`,
+`chmod 755 service.sh bypasscap.sh action.sh uninstall.sh`, reboot.
+
+Verify: `su -c 'tail /data/adb/chargebypasscap/cap.log'` should show the
+daemon starting, and the module description shows live status.
+
+## Usage
+
+Do nothing day to day: plug in, it caps at 80.
+
+**Travel-day full charge:** tap the module **action button** once. It
+releases bypass and latches override till unplug. Tap it again to resume the
+cap (it re-holds within ~30s if at 80%+). The button also prints battery
+state, daemon PID, and recent log.
 
 ## Requirements
 
 - Root with boot-script support (KernelSU tested; Magisk/APatch should work
-  since service.sh is a plain boot script).
-- A Sakata kernel exposing the bypass node above. On a kernel without it,
-  the daemon writes into the void: it then sees current still flowing after
-  its own write and latches override (fails safe, but the cap will not work).
+  since `service.sh` is a plain boot script).
+- A Sakata kernel exposing the bypass node above. Without it, the daemon
+  writes into the void: it then sees current still flowing after its own
+  write and latches override (fails safe, but the cap will not work).
 - The Sakata bypass app is OPTIONAL: it writes the same node, so its tile
   remains usable as a manual backup (last writer wins; the daemon leaves
   manually-suspended states alone, so the two do not fight).
-- HyperOS is NOT required. Nothing here is MIUI-specific: standard
-  /sys/class/power_supply nodes and shell tools. Any AOSP-based ROM on onyx
-  with a bypass-capable Sakata kernel should work, though only xiaomi.eu +
-  SakataX has been tested.
+- HyperOS is NOT required. Nothing here is MIUI-specific. Any AOSP-based ROM
+  on onyx with a bypass-capable Sakata kernel should work, though only
+  xiaomi.eu + SakataX has been tested.
 - Wired charging only (the wireless path is untested).
-
-## Install
-
-- Via KernelSU manager: Modules > Install from storage > pick the release zip.
-- Or via adb (root): copy this repo's files to `/data/adb/modules/chargebypasscap/`,
-  `chmod 755 service.sh bypasscap.sh action.sh uninstall.sh`, reboot.
-- Verify: `su -c 'tail /data/adb/chargebypasscap/cap.log'` should show the daemon
-  starting, and the module description shows live status.
 
 ## Files
 
@@ -88,12 +98,18 @@ daemon PID, and recent log.
 - `action.sh` - action button: toggles full-charge override AND prints
   instant status (battery, state, cap mode, daemon PID, recent log).
 - `uninstall.sh` - stops the daemon and removes state on module removal.
-- `module.prop` - module metadata (description doubles as live status line).
+- `module.prop` - metadata; its description doubles as the live status line.
+- `module.yaml` - manifest for the KernelSU Modules listing.
 
-## State and log
+## Logging
 
 - State dir: `/data/adb/chargebypasscap/` (holding, override, last_status, cap.log)
 - Log: `/data/adb/chargebypasscap/cap.log` - check what it did overnight.
+
+## Credits
+
+Bypass node documented by the Sakata kernel developer. Bug report for the
+broken built-in 80% limiter filed upstream against SakataX.
 
 ## License
 
