@@ -2,7 +2,7 @@
 schemaVersion: 1
 id: chargebypasscap
 name: ChargeBypassCap
-summary: Userspace 80% charge cap for Sakata kernel via the bypass node.
+summary: Automatically stops charging at 80% so your battery lasts longer.
 description: README.md
 license: GPL-3.0-only
 homepage: https://github.com/9M2PJU/ChargeBypassCap
