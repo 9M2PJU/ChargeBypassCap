@@ -11,7 +11,7 @@
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
 
-Userspace 80% charge cap for Sakata kernel. No kernel source needed, no app needed, no settings to flip.
+Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed — set the cap in the module WebUI (Open button).
 
 ## Why
 
@@ -48,14 +48,15 @@ The Sakata kernel exposes a bypass switch in sysfs:
   battery current drops to 0 mA. Write `0`: bypass OFF, charging resumes.
 
 A small root daemon (`bypasscap.sh`, started at boot by `service.sh`)
-polls the battery every 30 seconds while the cable is plugged in:
+polls the battery every 60 seconds while the cable is plugged in
+(CAP = your WebUI setting, 50-100%, default 80):
 
 | Battery | State | Action |
 | --- | --- | --- |
-| Reaches 80% while charging | Normal | Write `1`: hold at 80, phone runs off the cable |
-| Sinks to 78% while suspended | Holding | Write `0`: charging resumes |
-| 79%, or 100% trickle | Either | Left alone (deadband) |
-| Fresh plug-in below 80%, stuck suspended | Suspended | Write `0`: plug in means intent to charge |
+| Reaches CAP while charging | Normal | Write `1`: hold at CAP, phone runs off the cable |
+| Sinks to CAP-2 while suspended | Holding | Write `0`: charging resumes |
+| Deadband between, or 100% trickle | Either | Left alone (deadband) |
+| Fresh plug-in below CAP, stuck suspended | Suspended | Write `0`: plug in means intent to charge |
 | Holding, but current flows past grace period | Holding | You released it manually: latch override till unplug |
 | Unplugged | Any | Clear session state; next plug starts capped again |
 
@@ -70,7 +71,7 @@ rewritten by the daemon every poll:
 
 | Display | Meaning |
 | --- | --- |
-| 🔋 charging 76% | Filling normally, cap engages at 80% |
+| 🔋 charging 76% | Filling normally, cap engages at your setting |
 | ⛔ bypass ON, holding 88% | Resting at the cap, phone on cable power |
 | 🔓 override till unplug (92%) | Heading to 100%, auto-resets on unplug |
 | ⏸ idle | Suspended by your own hand, daemon leaving it alone |
@@ -91,11 +92,15 @@ daemon starting, and the module description shows live status.
 
 ## Usage
 
-Do nothing day to day: plug in, it caps at 80.
+**Set your cap:** tap the module **Open** button. A settings page shows live
+status plus a slider (50-100%, default 80): pick when bypass triggers on,
+tap Save. Charging resumes 2% below the cap. No reboot needed.
+
+Do nothing day to day: plug in, it caps at your setting.
 
 **Travel-day full charge:** tap the module **action button** once. It
 releases bypass and latches override till unplug. Tap it again to resume the
-cap (it re-holds within ~30s if at 80%+). The button also prints battery
+cap (it re-holds within ~60s if at cap+ and charging). The button also prints battery
 state, daemon PID, and recent log.
 
 ## Requirements

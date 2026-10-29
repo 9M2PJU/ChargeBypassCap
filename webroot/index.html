@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ChargeBypassCap</title>
+<meta name="color-scheme" content="dark light">
+<style>
+:root{
+  --bg:#f2f3f5; --card:#fff; --field:#eceef2; --press:#00000008;
+  --ink:#141518; --sub:#777c85; --faint:#aab0b9; --line:#ebedf0;
+  --accent:#1b6ef3; --a-soft:#e8f1fe;
+  --good:#1aa65a; --good-soft:#e5f6ec; --danger:#e5484d;
+  --track:#d3d7de; --thumb:#fff;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#000; --card:#151618; --field:#232529; --press:#ffffff0a;
+    --ink:#f4f5f7; --sub:#8b909a; --faint:#585d66; --line:#242529;
+    --accent:#4f97ff; --a-soft:#14233b;
+    --good:#2ecb80; --good-soft:#0f2a1d; --danger:#ff6b6f;
+    --track:#3a3d43; --thumb:#f4f5f7;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;padding:0 0 40px}
+.hero{padding:24px 24px 4px}
+.hero h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.hero .sub{margin:8px 0 0;color:var(--sub);font-size:13.5px}
+.scroll{padding:6px 16px}
+.card{background:var(--card);border-radius:24px;box-shadow:0 1px 1px rgba(16,18,22,.02),0 8px 22px rgba(16,18,22,.05);overflow:hidden}
+.lbl{font-size:12.5px;font-weight:700;color:var(--accent);margin:22px 10px 9px}
+.statusbar{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.statusbar .sk{width:38px;height:38px;border-radius:12px;background:var(--good-soft);color:var(--good);display:grid;place-items:center;flex-shrink:0;font-size:20px}
+.statusbar .lab{font-size:15px;font-weight:700}
+.statusbar .lab small{display:block;font-size:12px;color:var(--sub);font-weight:500;margin-top:2px}
+.row{padding:16px 18px}
+.bigval{font-size:44px;font-weight:800;letter-spacing:-.03em;text-align:center;font-variant-numeric:tabular-nums}
+.bigval small{font-size:18px;color:var(--sub);font-weight:600}
+.hint{text-align:center;color:var(--sub);font-size:12.5px;margin-top:4px}
+input[type=range]{width:100%;margin:18px 0 6px;accent-color:var(--accent);height:32px}
+.scale{display:flex;justify-content:space-between;color:var(--faint);font-size:11px;font-weight:600}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.preset{border:1px solid var(--line);background:var(--field);color:var(--ink);font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;cursor:pointer}
+.preset:active{transform:scale(.95)}
+.preset.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btnrow{display:flex;gap:10px;margin-top:14px}
+.save{flex:1;border:0;background:var(--accent);color:#fff;font:inherit;font-weight:700;font-size:15px;padding:13px;border-radius:14px;cursor:pointer}
+.save:active{transform:scale(.98);opacity:.9}
+.save:disabled{opacity:.5}
+.note{font-size:12px;color:var(--sub);padding:12px 20px 14px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(14px);background:var(--ink);color:var(--card);font-size:13px;font-weight:600;padding:11px 19px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:90;max-width:84%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.warn{margin:0 16px;background:var(--good-soft);color:var(--good);font-size:12.5px;font-weight:600;border-radius:14px;padding:10px 14px;display:none}
+.warn.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hero">
+    <h1>ChargeBypassCap</h1>
+    <p class="sub" id="heroState">Loading…</p>
+  </div>
+  <div class="warn" id="nobridge">No root bridge detected. Showing defaults — change the cap with the Action button or: <code>echo 85 &gt; /data/adb/chargebypasscap/high</code></div>
+  <div class="scroll">
+    <div class="lbl">Status</div>
+    <div class="card">
+      <div class="statusbar">
+        <span class="sk" id="stIcon">🔋</span>
+        <span class="lab"><span id="stText">Loading…</span><small id="stSub">reading battery</small></span>
+      </div>
+    </div>
+    <div class="lbl">Bypass triggers at</div>
+    <div class="card">
+      <div class="row">
+        <div class="bigval"><span id="capVal">80</span><small>%</small></div>
+        <div class="hint" id="resumeHint">charging resumes at 78%</div>
+        <input type="range" id="capSlider" min="50" max="100" step="1" value="80" aria-label="Bypass trigger percent">
+        <div class="scale"><span>50%</span><span>100%</span></div>
+        <div class="presets" id="presets">
+          <button class="preset" data-v="75">75%</button>
+          <button class="preset" data-v="80">80%</button>
+          <button class="preset" data-v="85">85%</button>
+          <button class="preset" data-v="90">90%</button>
+        </div>
+        <div class="btnrow">
+          <button class="save" id="saveBtn">Save cap</button>
+        </div>
+      </div>
+      <div class="note">Phone charges normally to the cap, then runs off the cable while the battery rests. It resumes charging 2% lower so the switch does not flap. Override to 100% anytime with the module Action button.</div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+<script defer src="main.js"></script>
+</body>
+</html>
