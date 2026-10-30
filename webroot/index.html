@@ -58,6 +58,9 @@ input[type=range]{width:100%;margin:18px 0 6px;accent-color:var(--accent);height
 .toast.show{opacity:1;transform:translateX(-50%)}
 .warn{margin:0 16px;background:var(--good-soft);color:var(--good);font-size:12.5px;font-weight:600;border-radius:14px;padding:10px 14px;display:none}
 .warn.show{display:block}
+.footer{text-align:center;color:var(--sub);font-size:12.5px;margin:22px 0 8px;line-height:2}
+.footer a{color:var(--accent);text-decoration:none;font-weight:700}
+.coffee{display:inline-block;margin-top:6px;background:#FFDD00;color:#000!important;font-weight:800;padding:6px 14px;border-radius:999px;text-decoration:none}
 </style>
 </head>
 <body>
@@ -95,8 +98,10 @@ input[type=range]{width:100%;margin:18px 0 6px;accent-color:var(--accent);height
       <div class="note">Phone charges normally to the cap, then runs off the cable while the battery rests. It resumes charging 2% lower so the switch does not flap. Override to 100% anytime with the module Action button.</div>
     </div>
   </div>
+  <div class="footer">Made by <a class="ext" href="https://hamradio.my" data-url="https://hamradio.my">9M2PJU</a><br><a class="coffee ext" href="https://buymeacoffee.com/9m2pju" data-url="https://buymeacoffee.com/9m2pju">Buy me a coffee</a></div>
   <div class="toast" id="toast"></div>
 </div>
 <script defer src="main.js"></script>
+<script>(function(){document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a.ext');if(!a)return;var url=a.getAttribute('data-url')||a.href;if(typeof ksu!=='undefined'&&ksu.exec){e.preventDefault();var cb='__open'+Date.now();window[cb]=function(){try{delete window[cb]}catch(_){}};try{ksu.exec('am start -a android.intent.action.VIEW -d '+url,'{}',cb)}catch(_){window.location.href=url}}});})();</script>
 </body>
 </html>

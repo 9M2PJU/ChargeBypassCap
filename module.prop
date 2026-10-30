@@ -1,7 +1,7 @@
 id=chargebypasscap
 name=ChargeBypassCap
-version=v1.8
-versionCode=12
+version=v1.9
+versionCode=13
 author=9M2PJU
 description=[🔋 charging] 80% cap via bypass node. Open=set cap, Action=full charge.
 support=https://github.com/9M2PJU/ChargeBypassCap/issues
