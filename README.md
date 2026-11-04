@@ -7,16 +7,16 @@
 [![Release](https://img.shields.io/github/v/release/9M2PJU/ChargeBypassCap?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![KernelSU](https://img.shields.io/badge/KernelSU-module-green?style=flat-square)](https://kernelsu.org)
-[![Platform](https://img.shields.io/badge/platform-Android%2015%2B-lightgrey?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap)
+[![Platform](https://img.shields.io/badge/platform-Android-lightgrey?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap)
 [![node](https://img.shields.io/badge/node-smart_night-blue?style=flat-square)](#how-it-works)
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
 
-Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed - set the cap in the module WebUI (Open button).
+Userspace adjustable charge cap via the kernel bypass node. No kernel source needed, no app needed - set the cap in the module WebUI (Open button).
 
-> **Two variants exist - pick yours:** this repo is for **POCO F7 (onyx)** on Sakata(X) kernels (drives `smart_night`). For **POCO X3 Pro (vayu)** on RE404 (drives `input_suspend`), use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node.
+> **Two variants exist - pick the one your kernel supports:** this repo drives `smart_night` (Xiaomi charger driver). If your kernel exposes the standard power_supply `input_suspend` instead, use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node. See Requirements for the 10-second check.
 
-## At a glance
+## At a glance (verified setup - anything meeting Requirements works)
 
 | Item | Detail |
 | --- | --- |
