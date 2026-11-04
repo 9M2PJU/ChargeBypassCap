@@ -13,6 +13,8 @@
 
 Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed — set the cap in the module WebUI (Open button).
 
+> **Two variants exist — pick yours:** this repo is for **POCO F7 (onyx)** on Sakata(X) kernels (drives `smart_night`). For **POCO X3 Pro (vayu)** on RE404 (drives `input_suspend`), use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node.
+
 ## Why
 
 The built-in 80% Battery protection limit does not work on this combination:
