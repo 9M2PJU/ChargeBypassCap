@@ -92,7 +92,7 @@ polls the battery every 30 seconds while the cable is plugged in
 | Sinks to CAP-2 while suspended | Holding | Write `0`: charging resumes |
 | Deadband between, or 100% trickle | Either | Left alone (deadband) |
 | Fresh plug-in below CAP, stuck suspended | Suspended | Write `0`: plug in means intent to charge |
-| Holding, but current flows past grace period | Holding | You released it manually: latch override till unplug (but see Reboots: external clears within 10 min of start are re-asserted) |
+| Holding, but current flows past grace period | Holding | Nobody asked for release (no OVERRIDE file): re-assert, up to 10 in a row, then yield + override (broken node) |
 | Reboot with cable in above CAP | Booting | Hammer node to `1` till it sticks, 5-min grace; re-assert if cleared within 10 min of start (v1.10) |
 | Unplugged | Any | Clear session state; next plug starts capped again |
 
@@ -112,7 +112,9 @@ and late charger init cleared the node minutes later. v1.10 hammers the
 write until it reads back stuck (5-minute grace) and re-asserts any node
 clear within 10 minutes of start instead of yielding. Verified across
 three reboot cycles with cable in: one re-assert, then steady 0 mA hold,
-zero false overrides.
+zero false overrides. Since v1.14 the re-assert is unconditional (no more
+10-minute window): any external clear is re-asserted, and only 10
+consecutive failures yield to a node that will not hold.
 
 ### ROM Battery protection modes
 
@@ -120,7 +122,7 @@ zero false overrides.
 | --- | --- |
 | Charge fully | Use this. The module is the sole decider; verified working. |
 | 80% limit | Never use. Measured broken: freezes all charging at any level (0 mA at 44% and 50%) through the same voter the module drives. |
-| Intelligent / smart | Not recommended. Its top-up resume current disarms the module through the same branch as the reboot bug (override till unplug), and its hold-then-top-up behavior is unverified on this stack. |
+| Intelligent / smart | Not recommended. Its top-up resume current is treated as hostile and re-asserted (up to 10 consecutive polls), then the daemon yields to the unholdable node - so a 6am top-up still finishes to 100%, minutes later, with the fight in the log. Turn it off for a deterministic cap. |
 
 None of these matter while the phone is powered off. Offline charging
 goes to 100% no matter what, so unplug before a scheduled shutdown if
@@ -134,10 +136,10 @@ battery happens to be at, so the two cannot cooperate - the module can
 never release a ROM-held freeze. Intelligent charging is subtler: while
 it holds, both sides agree and nothing happens, but the moment it
 resumes current for its morning top-up, the module (holding, no OVERRIDE
-file) reads it as a manual release and latches override till unplug -
-the cap stands down and the phone finishes to 100%. v1.10 only
-re-asserts such clears within 10 minutes of boot; a 6am top-up still
-disarms it. Recommended setup, verified live: ROM on Charge fully,
+file) treats it as hostile and re-asserts it - up to 10 consecutive polls
+(~5 minutes at 30s polls) - before yielding to a node that will not hold.
+A 6am top-up therefore still finishes to 100%, minutes later, with the
+fight in the log. Recommended setup, verified live: ROM on Charge fully,
 module cap at 80%, cable out before any scheduled shutdown.
 
 ### MIUI ROM toggles
@@ -145,6 +147,14 @@ module cap at 80%, cable out before any scheduled shutdown.
 The sister module's phone (POCO X3 Pro, MIUI 14) has its own two toggles
 and findings - documented in the
 [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI) README.
+
+### Watchdog
+
+The daemon beats a `heartbeat` file every poll, plugged or not. A
+supervisor loop in `service.sh` checks it every 180s and restarts a
+stale daemon (TERM, then KILL after 5s), up to 5 times before giving up
+till next boot - every step logged. A dead daemon can no longer silently
+disarm the cap; the worst case is a logged restart.
 
 ## Safety
 
@@ -225,9 +235,9 @@ version, and kernel name do not matter.
   not 80% limit, not Intelligent; MIUI: both toggles off - see ROM Battery
   protection modes). Two drivers voting on one charger can only confuse each
   other; the module is verified as the sole decider.
-- The Sakata bypass app is OPTIONAL: it writes the same node, so its tile
-  remains usable as a manual backup (last writer wins; the daemon leaves
-  manually-suspended states alone, so the two do not fight).
+- The Sakata bypass app is NOT a manual override: the daemon owns the node
+  and reverts external writes within 1-2 polls. Release bypass only via the
+  action button (it signals through OVERRIDE, which is always honored).
 - HyperOS is NOT required. Nothing here is MIUI-specific. Tested on the CN
   base OS3.0.306.0 with SakataX 6.6.144 (earlier builds on xiaomi.eu).
 - Wired charging only (the wireless path is untested).
@@ -331,7 +341,7 @@ Verdict: healthy, no code changes needed.
 
 ## Files
 
-- `service.sh` - started by KernelSU-Next on boot, launches the daemon detached.
+- `service.sh` - started by KernelSU-Next on boot; launches the daemon detached plus a watchdog that restarts it if its heartbeat goes stale.
 - `bypasscap.sh` - the daemon (self-backgrounds).
 - `action.sh` - action button: toggles full-charge override AND prints
   instant status (battery, state, cap mode, daemon PID, recent log).
@@ -341,7 +351,7 @@ Verdict: healthy, no code changes needed.
 
 ## Logging
 
-- State dir: `/data/adb/chargebypasscap/` (holding, override, last_status, cap.log)
+- State dir: `/data/adb/chargebypasscap/` (holding, override, last_status, heartbeat, cap.log)
 - Log: `/data/adb/chargebypasscap/cap.log` - check what it did overnight.
 
 ## Credits
