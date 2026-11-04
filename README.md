@@ -207,16 +207,28 @@ battery state, daemon PID, and recent log.
 
 ## Requirements
 
+**The short version:** this module works on any ROM and any kernel, as
+long as three things hold: root with boot scripts, a KernelSU-family
+manager, and a kernel that exposes the bypass node. ROM brand, Android
+version, and kernel name do not matter.
+
 - Root with boot-script support (KernelSU-Next tested; Magisk/APatch should work
   since `service.sh` is a plain boot script).
-- A Sakata kernel exposing the bypass node above. Without it, the daemon
-  writes into the void: it then sees current still flowing after its own
-  write and latches override (fails safe, but the cap will not work).
+- A kernel exposing `/sys/class/xm_power/charger/smart_charge/smart_night`
+  (Sakata ships it; other onyx kernels based on Xiaomi's charger driver may
+  too). Check yours in one command (root shell):
+  `ls /sys/class/xm_power/charger/smart_charge/smart_night`
+  If the file exists, the module can drive it. Without it, the daemon writes
+  into the void: it then sees current still flowing after its own write and
+  latches override (fails safe, but the cap will not work).
+- For best results, turn the ROM's own limiters off (HyperOS: Charge fully -
+  not 80% limit, not Intelligent; MIUI: both toggles off - see ROM Battery
+  protection modes). Two drivers voting on one charger can only confuse each
+  other; the module is verified as the sole decider.
 - The Sakata bypass app is OPTIONAL: it writes the same node, so its tile
   remains usable as a manual backup (last writer wins; the daemon leaves
   manually-suspended states alone, so the two do not fight).
-- HyperOS is NOT required. Nothing here is MIUI-specific. Any AOSP-based ROM
-  on onyx with a bypass-capable Sakata kernel should work; tested on the CN
+- HyperOS is NOT required. Nothing here is MIUI-specific. Tested on the CN
   base OS3.0.306.0 with SakataX 6.6.144 (earlier builds on xiaomi.eu).
 - Wired charging only (the wireless path is untested).
 
