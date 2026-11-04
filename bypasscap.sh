@@ -8,6 +8,8 @@
 #   - Battery reaches CAP while charging -> writes 1 to the node.
 #     Phone runs off the cable, battery rests at ~CAP.
 #   - Battery falls to CAP-2 while suspended -> writes 0, charging resumes.
+#   - Reboot with cable in above CAP: the hold is re-asserted (the kernel
+#     node resets to 0 on boot, so adopt re-writes 1 instead of trusting it).
 #   - You want 100% (travel day)? When it holds at CAP, use the action
 #     button (or the Sakata app tile) to release bypass once yourself.
 #     The daemon backs off until you unplug. Next plug session the cap
@@ -25,6 +27,7 @@
 MODDIR=/data/adb/chargebypasscap
 LOG=$MODDIR/cap.log
 HOLDING=$MODDIR/holding
+START=$(date +%s 2>/dev/null)
 OVERRIDE=$MODDIR/override
 HIGH_FILE=$MODDIR/high
 NODE=/sys/class/xm_power/charger/smart_charge/smart_night
@@ -83,13 +86,23 @@ rm -f $OVERRIDE
 HIGH=$(read_high); LOW=$((HIGH - 2))
 if [ "$prev_usb" = "1" ] && [ -n "$cap0" ] && [ "$cap0" -ge "$HIGH" ] && [ -n "$cur0" ] && ! is_charging "$cur0"; then
   touch $HOLDING
+  # Re-assert the hold: a reboot resets the kernel node to 0, and this code
+  # runs before the charger stack is up, so hammer the write until it reads
+  # back stuck. Without this the resumed charge current looks like a manual
+  # release and latches override (2026-11-04: 02:00 reboot -> 100% by 02:35;
+  # a one-shot rewrite was still lost to late charger init in testing).
+  for i in 1 2 3 4 5 6; do
+    echo 1 > $NODE 2>/dev/null
+    sleep 10
+    [ "$(cat $NODE 2>/dev/null)" = "1" ] && break
+  done
   log "bypasscap started (adopted existing hold at ${cap0}%, cap ${HIGH}%)"
+  grace=5
 else
   rm -f $HOLDING
   log "chargebypasscap started (always-on ${HIGH}% cap, override via action button)"
+  grace=0
 fi
-
-grace=0
 
 loop() {
   while true; do
@@ -126,10 +139,21 @@ loop() {
           grace=$GRACE_POLLS
           sleep 30
         else
-          # Holding but current flowing past grace: user released bypass.
-          log "manual bypass-OFF detected -> override till unplug"
-          touch $OVERRIDE
-          rm -f $HOLDING
+          # Holding but current flowing past grace with no override file.
+          # The action button always sets OVERRIDE first, so this is an
+          # external node change. Within 10 min of start it is boot-time
+          # charger settling -> re-assert instead of yielding (2026-11-04:
+          # late charger init cleared the node minutes after adopt).
+          now=$(date +%s 2>/dev/null)
+          if [ -n "$START" ] && [ -n "$now" ] && [ $((now - START)) -lt 600 ]; then
+            log "node cleared after start -> re-asserting hold"
+            echo 1 > $NODE 2>/dev/null
+            grace=$GRACE_POLLS
+          else
+            log "manual bypass-OFF detected -> override till unplug"
+            touch $OVERRIDE
+            rm -f $HOLDING
+          fi
         fi
       elif [ "$cap" -le "$LOW" ] && ! is_charging "$cur"; then
         if [ -f $HOLDING ]; then
