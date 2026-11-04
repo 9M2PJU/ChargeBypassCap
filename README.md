@@ -119,6 +119,26 @@ Same principle as HyperOS: both toggles off, module cap at 80% as the
 sole decider, cable out across powered-off hours. Full write-up in the
 [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI) README.
 
+## Safety
+
+The module only votes suspend/resume through the kernel's own bypass
+switch — the same node Sakata's bypass app drives, same values. It has
+no path to voltage or current: float voltage, fast-charge current,
+JEITA temperature derating, and OVP/OCP/thermal shutdown stay enforced
+by the PMIC hardware and lower driver layers no matter what the module
+writes, so overvoltage/overcurrent via this module is not possible.
+Every stuck state is safe: node stuck at 1 = phone runs off the cable
+(a designed mode); stuck at 0 = ordinary charging; daemon crash = the
+node just stays put. Sysfs is written only on state transitions (60s
+polls, 2% engage/release gap, bounded boot hammer), a few transitions a
+day — no relay-chatter on the FETs. Measured on the author's phone:
+battery health Good, zero charger fault/OVP/OCP/JEITA events in the
+kernel log across months of use. Every bug found so far produced
+overcharge to 100% (a longevity nit), never an unsafe electrical state.
+One caveat: after a kernel update, glance at the log once — a kernel
+that repurposes the node would silently neuter the cap, not damage
+anything.
+
 ## Live status
 
 The module description in the KernelSU manager always shows the live state,
