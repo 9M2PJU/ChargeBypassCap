@@ -10,8 +10,6 @@
 [![Platform](https://img.shields.io/badge/platform-Android-lightgrey?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap)
 [![node](https://img.shields.io/badge/node-smart_night-blue?style=flat-square)](#how-it-works)
 
-[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
-
 Userspace adjustable charge cap via the kernel bypass node. No kernel source needed, no app needed - set the cap in the module WebUI (Open button).
 
 > **Two variants exist - pick the one your kernel supports:** this repo drives `smart_night` (Xiaomi charger driver). If your kernel exposes the standard power_supply `input_suspend` instead, use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node. See Requirements for the 10-second check.
@@ -34,6 +32,7 @@ Userspace adjustable charge cap via the kernel bypass node. No kernel source nee
   - [Reboots (fixed in v1.10)](#reboots-fixed-in-v110)
   - [ROM Battery protection modes](#rom-battery-protection-modes)
   - [MIUI ROM toggles](#miui-rom-toggles)
+  - [Watchdog](#watchdog)
 - [Safety](#safety)
 - [Live status](#live-status)
 - [Installation](#installation)
@@ -358,6 +357,13 @@ Verdict: healthy, no code changes needed.
 
 Bypass node documented by the Sakata kernel developer. Bug report for the
 broken built-in 80% limiter filed upstream against SakataX.
+
+## Support
+
+If this module holds your battery where you set it, consider buying me a
+coffee - it funds test devices and the kernel experiments behind it.
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
 
 ## License
 
