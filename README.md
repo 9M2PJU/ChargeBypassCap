@@ -11,16 +11,18 @@
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
 
-Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed — set the cap in the module WebUI (Open button).
+Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed - set the cap in the module WebUI (Open button).
 
-> **Two variants exist — pick yours:** this repo is for **POCO F7 (onyx)** on Sakata(X) kernels (drives `smart_night`). For **POCO X3 Pro (vayu)** on RE404 (drives `input_suspend`), use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node.
+> **Two variants exist - pick yours:** this repo is for **POCO F7 (onyx)** on Sakata(X) kernels (drives `smart_night`). For **POCO X3 Pro (vayu)** on RE404 (drives `input_suspend`), use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node.
 
 ## Why
 
 The built-in 80% Battery protection limit does not work on this combination:
-POCO F7 running HyperOS EU (xiaomi.eu) with the SakataX kernel. Enabling it
-does not cap charging at 80%. It freezes charging completely, at whatever
-charge level the battery happens to be at.
+POCO F7 with the SakataX kernel. Enabling it does not cap charging at 80%.
+It freezes charging completely, at whatever charge level the battery happens
+to be at. (Measured on xiaomi.eu + older SakataX; the phone has since moved
+to the CN base with SakataX 6.6.144, where the limiter has not been
+re-tested - with the module as sole decider there is no reason to.)
 
 What actually happens, verified by measurement:
 
@@ -97,11 +99,11 @@ How they interact, in detail: the module and the ROM limiter share one
 kernel voter (`soc_limit` in the MCA buck-charger driver). The module
 holds by voting suspend; the ROM 80% limit votes suspend too, but its
 implementation on this stack freezes charging at whatever level the
-battery happens to be at, so the two cannot cooperate — the module can
+battery happens to be at, so the two cannot cooperate - the module can
 never release a ROM-held freeze. Intelligent charging is subtler: while
 it holds, both sides agree and nothing happens, but the moment it
 resumes current for its morning top-up, the module (holding, no OVERRIDE
-file) reads it as a manual release and latches override till unplug —
+file) reads it as a manual release and latches override till unplug -
 the cap stands down and the phone finishes to 100%. v1.10 only
 re-asserts such clears within 10 minutes of boot; a 6am top-up still
 disarms it. Recommended setup, verified live: ROM on Charge fully,
@@ -110,13 +112,13 @@ module cap at 80%, cable out before any scheduled shutdown.
 ### MIUI ROM toggles
 
 The sister module's phone (POCO X3 Pro, MIUI 14) has its own two toggles
-and findings — documented in the
+and findings - documented in the
 [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI) README.
 
 ## Safety
 
 The module only votes suspend/resume through the kernel's own bypass
-switch — the same node Sakata's bypass app drives, same values. It has
+switch - the same node Sakata's bypass app drives, same values. It has
 no path to voltage or current: float voltage, fast-charge current,
 JEITA temperature derating, and OVP/OCP/thermal shutdown stay enforced
 by the PMIC hardware and lower driver layers no matter what the module
@@ -125,11 +127,11 @@ Every stuck state is safe: node stuck at 1 = phone runs off the cable
 (a designed mode); stuck at 0 = ordinary charging; daemon crash = the
 node just stays put. Sysfs is written only on state transitions (60s
 polls, 2% engage/release gap, bounded boot hammer), a few transitions a
-day — no relay-chatter on the FETs. Measured on the author's phone:
+day - no relay-chatter on the FETs. Measured on the author's phone:
 battery health Good, zero charger fault/OVP/OCP/JEITA events in the
 kernel log across months of use. Every bug found so far produced
 overcharge to 100% (a longevity nit), never an unsafe electrical state.
-One caveat: after a kernel update, glance at the log once — a kernel
+One caveat: after a kernel update, glance at the log once - a kernel
 that repurposes the node would silently neuter the cap, not damage
 anything.
 
@@ -148,7 +150,7 @@ rewritten by the daemon every poll:
 
 ## Installation
 
-**KernelSU manager (recommended):**
+**KernelSU-Next manager (recommended):**
 Modules > Install from storage > pick the release ZIP from the
 [releases page](https://github.com/9M2PJU/ChargeBypassCap/releases). Reboot.
 
@@ -169,12 +171,12 @@ Do nothing day to day: plug in, it caps at your setting.
 
 **Travel-day full charge:** tap the module **action button** once. It
 releases bypass and latches override till unplug. Tap it again to resume the
-cap (it re-holds within ~60s if at cap+ and charging). The button also prints battery
-state, daemon PID, and recent log.
+cap (it re-holds within ~60s if at cap+ and charging). The button also prints
+battery state, daemon PID, and recent log.
 
 ## Requirements
 
-- Root with boot-script support (KernelSU tested; Magisk/APatch should work
+- Root with boot-script support (KernelSU-Next tested; Magisk/APatch should work
   since `service.sh` is a plain boot script).
 - A Sakata kernel exposing the bypass node above. Without it, the daemon
   writes into the void: it then sees current still flowing after its own
@@ -183,8 +185,8 @@ state, daemon PID, and recent log.
   remains usable as a manual backup (last writer wins; the daemon leaves
   manually-suspended states alone, so the two do not fight).
 - HyperOS is NOT required. Nothing here is MIUI-specific. Any AOSP-based ROM
-  on onyx with a bypass-capable Sakata kernel should work, though only
-  xiaomi.eu + SakataX has been tested.
+  on onyx with a bypass-capable Sakata kernel should work; tested on the CN
+  base OS3.0.306.0 with SakataX 6.6.144 (earlier builds on xiaomi.eu).
 - Wired charging only (the wireless path is untested).
 
 ## Audit report (2026-10-29, v1.7.1 on POCO F7)
@@ -255,11 +257,11 @@ Verdict: healthy, no code changes needed.
 
 - **Files:** all four scripts md5-identical to the release. One fix
   applied on device: `action.sh`, `service.sh`, `uninstall.sh` were
-  `644` installed (repo ships `755`) — the manager action button needs
+  `644` installed (repo ships `755`) - the manager action button needs
   the exec bit, so they were chmodded to `755`. Future installs from
   the repo/zip are unaffected.
 - **Daemon:** single instance (PID 6377), RSS 1244 KB (matches October),
-  CPU below `/proc` tick resolution across 15+ min windows — same
+  CPU below `/proc` tick resolution across 15+ min windows - same
   ~0.1 s/poll class as measured before. No duplicate daemons.
 - **Paths verified live:** plug-in detect; adopt + hammer across a
   reboot with cable in; one `re-asserting hold` against late charger
@@ -281,7 +283,7 @@ Verdict: healthy, no code changes needed.
 
 ## Files
 
-- `service.sh` - started by KernelSU on boot, launches the daemon detached.
+- `service.sh` - started by KernelSU-Next on boot, launches the daemon detached.
 - `bypasscap.sh` - the daemon (self-backgrounds).
 - `action.sh` - action button: toggles full-charge override AND prints
   instant status (battery, state, cap mode, daemon PID, recent log).
