@@ -105,6 +105,20 @@ re-asserts such clears within 10 minutes of boot; a 6am top-up still
 disarms it. Recommended setup, verified live: ROM on Charge fully,
 module cap at 80%, cable out before any scheduled shutdown.
 
+### MIUI ROM toggles (sister module on POCO X3 Pro)
+
+MIUI 14 splits this into two toggles (states read from the
+`com.miui.securitycenter` prefs on the phone, both found ON):
+
+| Toggle | Behavior | With the module |
+| --- | --- | --- |
+| Battery protection (`cb_always_charge_protect`) | MIUI's own ~80% cap, documented leaky: blew past 80% to 84% at full current on vayu | Redundant at best. The module holds 80% first so stock stays idle — but it leaves a second unobservable voter on the same charger. Turn off. |
+| Smart charging (`cb_intellect_charge_protect`) | Night top-up learner: holds ~80%, resumes to 100% before wake | Defeats the cap. Its top-up resume reads to the module as a manual release, latching override till unplug, so the phone finishes to 100%. Turn off. |
+
+Same principle as HyperOS: both toggles off, module cap at 80% as the
+sole decider, cable out across powered-off hours. Full write-up in the
+[ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI) README.
+
 ## Live status
 
 The module description in the KernelSU manager always shows the live state,
