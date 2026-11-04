@@ -57,12 +57,53 @@ polls the battery every 60 seconds while the cable is plugged in
 | Sinks to CAP-2 while suspended | Holding | Write `0`: charging resumes |
 | Deadband between, or 100% trickle | Either | Left alone (deadband) |
 | Fresh plug-in below CAP, stuck suspended | Suspended | Write `0`: plug in means intent to charge |
-| Holding, but current flows past grace period | Holding | You released it manually: latch override till unplug |
+| Holding, but current flows past grace period | Holding | You released it manually: latch override till unplug (but see Reboots: external clears within 10 min of start are re-asserted) |
+| Reboot with cable in above CAP | Booting | Hammer node to `1` till it sticks, 5-min grace; re-assert if cleared within 10 min of start (v1.10) |
 | Unplugged | Any | Clear session state; next plug starts capped again |
 
 The 2% gap between engage and release stops the switch from flapping. The
 daemon never touches ROM Battery protection: leave that on Charge fully so
 the broken built-in limiter never engages.
+
+### Reboots (fixed in v1.10)
+
+2026-11-04, POCO F7: kernel-flash reboots overnight exposed an adopt bug.
+A reboot resets the kernel node to 0, but the daemon trusted the stale hold
+and never re-wrote it. One poll later the resumed charge current looked
+like a manual release, latched override, and the battery went 81% to 100%
+by 02:35. A first fix (single rewrite on adopt) failed in live testing:
+the daemon starts before the charger stack is up, so the write was lost
+and late charger init cleared the node minutes later. v1.10 hammers the
+write until it reads back stuck (5-minute grace) and re-asserts any node
+clear within 10 minutes of start instead of yielding. Verified across
+three reboot cycles with cable in: one re-assert, then steady 0 mA hold,
+zero false overrides.
+
+### ROM Battery protection modes
+
+| ROM mode | With this module |
+| --- | --- |
+| Charge fully | Use this. The module is the sole decider; verified working. |
+| 80% limit | Never use. Measured broken: freezes all charging at any level (0 mA at 44% and 50%) through the same voter the module drives. |
+| Intelligent / smart | Not recommended. Its top-up resume current disarms the module through the same branch as the reboot bug (override till unplug), and its hold-then-top-up behavior is unverified on this stack. |
+
+None of these matter while the phone is powered off. Offline charging
+goes to 100% no matter what, so unplug before a scheduled shutdown if
+you want to wake at the cap.
+
+How they interact, in detail: the module and the ROM limiter share one
+kernel voter (`soc_limit` in the MCA buck-charger driver). The module
+holds by voting suspend; the ROM 80% limit votes suspend too, but its
+implementation on this stack freezes charging at whatever level the
+battery happens to be at, so the two cannot cooperate — the module can
+never release a ROM-held freeze. Intelligent charging is subtler: while
+it holds, both sides agree and nothing happens, but the moment it
+resumes current for its morning top-up, the module (holding, no OVERRIDE
+file) reads it as a manual release and latches override till unplug —
+the cap stands down and the phone finishes to 100%. v1.10 only
+re-asserts such clears within 10 minutes of boot; a 6am top-up still
+disarms it. Recommended setup, verified live: ROM on Charge fully,
+module cap at 80%, cable out before any scheduled shutdown.
 
 ## Live status
 
