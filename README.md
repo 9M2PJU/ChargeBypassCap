@@ -8,12 +8,43 @@
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![KernelSU](https://img.shields.io/badge/KernelSU-module-green?style=flat-square)](https://kernelsu.org)
 [![Platform](https://img.shields.io/badge/platform-Android%2015%2B-lightgrey?style=flat-square)](https://github.com/9M2PJU/ChargeBypassCap)
+[![node](https://img.shields.io/badge/node-smart_night-blue?style=flat-square)](#how-it-works)
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://buymeacoffee.com/9m2pju)
 
 Userspace adjustable charge cap for Sakata kernel. No kernel source needed, no app needed - set the cap in the module WebUI (Open button).
 
 > **Two variants exist - pick yours:** this repo is for **POCO F7 (onyx)** on Sakata(X) kernels (drives `smart_night`). For **POCO X3 Pro (vayu)** on RE404 (drives `input_suspend`), use [ChargeBypassCap-PMI](https://github.com/9M2PJU/ChargeBypassCap-PMI). Same daemon logic, different node.
+
+## At a glance
+
+| Item | Detail |
+| --- | --- |
+| Phone | POCO F7 (onyx, 25053PC47G) |
+| Kernel | SakataX 6.6.144 |
+| Control node | `/sys/class/xm_power/charger/smart_charge/smart_night` |
+| Manager | KernelSU-Next |
+| Default cap | 80% (adjustable 50-100%) |
+| ROM setting | Charge fully |
+
+## Contents
+
+- [Why](#why)
+- [How it works](#how-it-works)
+  - [Reboots (fixed in v1.10)](#reboots-fixed-in-v110)
+  - [ROM Battery protection modes](#rom-battery-protection-modes)
+  - [MIUI ROM toggles](#miui-rom-toggles)
+- [Safety](#safety)
+- [Live status](#live-status)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Requirements](#requirements)
+- [Audit report (2026-10-29)](#audit-report-2026-10-29-v171-on-poco-f7)
+- [Audit report (2026-11-04)](#audit-report-2026-11-04-v111-code-on-poco-f7)
+- [Files](#files)
+- [Logging](#logging)
+- [Credits](#credits)
+- [License](#license)
 
 ## Why
 
@@ -191,6 +222,9 @@ battery state, daemon PID, and recent log.
 
 ## Audit report (2026-10-29, v1.7.1 on POCO F7)
 
+<details>
+<summary>Historical audit - all checks passed, two bugs fixed (click to expand)</summary>
+
 Method: live checks on the author's phone (POCO F7, xiaomi.eu + SakataX,
 module installed from the v1.7.1 release ZIP) plus a full read of all four
 scripts. Every check below was run, not inferred.
@@ -249,6 +283,8 @@ in override, never in a bootloop), clean uninstall.
   unplugged.
 - Bottom line: below anything the battery stats can attribute. Any
   single user app wakes the phone orders of magnitude more.
+
+</details>
 
 ## Audit report (2026-11-04, v1.11 code on POCO F7)
 
