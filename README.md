@@ -83,7 +83,7 @@ The Sakata kernel exposes a bypass switch in sysfs:
   battery current drops to 0 mA. Write `0`: bypass OFF, charging resumes.
 
 A small root daemon (`bypasscap.sh`, started at boot by `service.sh`)
-polls the battery every 60 seconds while the cable is plugged in
+polls the battery every 30 seconds while the cable is plugged in
 (CAP = your WebUI setting, 50-100%, default 80):
 
 | Battery | State | Action |
@@ -156,7 +156,7 @@ by the PMIC hardware and lower driver layers no matter what the module
 writes, so overvoltage/overcurrent via this module is not possible.
 Every stuck state is safe: node stuck at 1 = phone runs off the cable
 (a designed mode); stuck at 0 = ordinary charging; daemon crash = the
-node just stays put. Sysfs is written only on state transitions (60s
+node just stays put. Sysfs is written only on state transitions (30s
 polls, 2% engage/release gap, bounded boot hammer), a few transitions a
 day - no relay-chatter on the FETs. Measured on the author's phone:
 battery health Good, zero charger fault/OVP/OCP/JEITA events in the
@@ -202,7 +202,7 @@ Do nothing day to day: plug in, it caps at your setting.
 
 **Travel-day full charge:** tap the module **action button** once. It
 releases bypass and latches override till unplug. Tap it again to resume the
-cap (it re-holds within ~60s if at cap+ and charging). The button also prints
+cap (it re-holds within ~30s if at cap+ and charging). The button also prints
 battery state, daemon PID, and recent log.
 
 ## Requirements

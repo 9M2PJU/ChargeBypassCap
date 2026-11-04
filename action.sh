@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # KernelSU action button: toggle full-charge override + status readout.
 # Tap once   -> override till unplug: bypass OFF, charges to 100%.
-# Tap again  -> override cleared: cap resumes within ~60s.
+# Tap again  -> override cleared: cap resumes within ~30s.
 STATEDIR=/data/adb/chargebypasscap
 HIGH_FILE=$STATEDIR/high
 LOG=$STATEDIR/cap.log
@@ -25,7 +25,7 @@ pid=$(pgrep -f "modules/chargebypasscap/bypasscap" 2>/dev/null | head -n 1)
 if [ -f $OVERRIDE ]; then
   rm -f $OVERRIDE
   echo "✅ Override cleared. ${HIGH}% cap is active again."
-  echo "If at ${HIGH}%+ and charging, bypass re-engages within ~60s."
+  echo "If at ${HIGH}%+ and charging, bypass re-engages within ~30s."
 else
   touch $OVERRIDE
   rm -f $HOLDING

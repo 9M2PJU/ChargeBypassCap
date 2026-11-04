@@ -34,9 +34,9 @@ NODE=/sys/class/xm_power/charger/smart_charge/smart_night
 CAP=/sys/class/power_supply/battery/capacity
 CUR=/sys/class/power_supply/battery/current_now
 USBON=/sys/class/power_supply/usb/online
-POLL=60
+POLL=30
 CHG_THRESH=-500000
-GRACE_POLLS=2
+GRACE_POLLS=4
 
 # Adjustable cap: WebUI slider writes 50-100 into $HIGH_FILE.
 # LOW (resume level) is always HIGH-2 to stop flapping.
@@ -97,7 +97,7 @@ if [ "$prev_usb" = "1" ] && [ -n "$cap0" ] && [ "$cap0" -ge "$HIGH" ] && [ -n "$
     [ "$(cat $NODE 2>/dev/null)" = "1" ] && break
   done
   log "bypasscap started (adopted existing hold at ${cap0}%, cap ${HIGH}%)"
-  grace=5
+  grace=10
 else
   rm -f $HOLDING
   log "chargebypasscap started (always-on ${HIGH}% cap, override via action button)"
