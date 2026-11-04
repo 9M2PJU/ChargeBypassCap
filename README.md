@@ -248,6 +248,37 @@ in override, never in a bootloop), clean uninstall.
 - Bottom line: below anything the battery stats can attribute. Any
   single user app wakes the phone orders of magnitude more.
 
+## Audit report (2026-11-04, v1.11 code on POCO F7)
+
+Full re-audit after the v1.10 reboot fix, all paths exercised live.
+Verdict: healthy, no code changes needed.
+
+- **Files:** all four scripts md5-identical to the release. One fix
+  applied on device: `action.sh`, `service.sh`, `uninstall.sh` were
+  `644` installed (repo ships `755`) — the manager action button needs
+  the exec bit, so they were chmodded to `755`. Future installs from
+  the repo/zip are unaffected.
+- **Daemon:** single instance (PID 6377), RSS 1244 KB (matches October),
+  CPU below `/proc` tick resolution across 15+ min windows — same
+  ~0.1 s/poll class as measured before. No duplicate daemons.
+- **Paths verified live:** plug-in detect; adopt + hammer across a
+  reboot with cable in; one `re-asserting hold` against late charger
+  init; engage from a real 1.28 A charge state (`cap=100 charging ->
+  bypass ON`, 0 mA after); action-button release (override latched,
+  1.5 A flows, daemon hands-off for 75 s, outputs accurate); action
+  clear + automatic re-hold within one poll; node driven 1 -> 0 -> 1.
+- **13:49 manual-OFF:** user cable juggling (unplug/replug), which
+  clears the node via charger renegotiation. Benign and correctly
+  classified; within 10 min of boot v1.10 would have re-asserted it.
+- **Measurement note:** frozen `/proc` CPU counters plus the
+  -500000 engage threshold can mimic a stuck daemon (a charger
+  delivering under threshold reads as idle deadband, correctly
+  silent). The plug-event log line is the ground-truth liveness check,
+  and it fired on cue.
+- **Not exercised this round:** resume-from-hold at CAP-2 (battery
+  never left 100%), full-rate pump hold at 5 A+.
+- **Manager on this phone:** KernelSU-Next (X3 Pro uses KowSU).
+
 ## Files
 
 - `service.sh` - started by KernelSU on boot, launches the daemon detached.
